@@ -1,0 +1,78 @@
+[0m23:38:52  Began running node model.my_new_project.dim_customer
+[0m23:38:52  1 of 3 START sql table model dbt_mbuniotto.dim_customer ........................ [RUN]
+[0m23:38:52  Acquiring new bigquery connection "model.my_new_project.dim_customer"
+[0m23:38:52  Began compiling node model.my_new_project.dim_customer
+[0m23:38:52  Compiling model.my_new_project.dim_customer
+[0m23:38:52  Writing injected SQL for node "model.my_new_project.dim_customer"
+[0m23:38:52  finished collecting timing info
+[0m23:38:52  Began executing node model.my_new_project.dim_customer
+[0m23:38:52  Opening a new connection, currently in state closed
+[0m23:38:52  Writing runtime sql for node "model.my_new_project.dim_customer"
+[0m23:38:52  On model.my_new_project.dim_customer: /* {"app": "dbt", "dbt_version": "1.3.1", "profile_name": "user", "target_name": "default", "node_id": "model.my_new_project.dim_customer"} */
+
+  
+    
+
+    create or replace table `dbtlabs-371220`.`dbt_mbuniotto`.`dim_customer`
+    
+    
+    OPTIONS()
+    as (
+      
+
+with
+    customers as (
+
+        select id as customer_id, first_name, last_name from dbt-tutorial.jaffle_shop.customers
+
+    ),
+
+    orders as (
+
+        select id as order_id, user_id as customer_id, order_date, status
+
+        from dbt-tutorial.jaffle_shop.orders
+
+    ),
+
+    customer_orders as (
+
+        select
+            customer_id,
+
+            min(order_date) as first_order_date,
+            max(order_date) as most_recent_order_date,
+            count(order_id) as number_of_orders
+
+        from orders
+
+        group by 1
+
+    ),
+
+
+    final as (
+
+        select
+            customers.customer_id,
+            customers.first_name,
+            customers.last_name,
+            customer_orders.first_order_date,
+            customer_orders.most_recent_order_date,
+            coalesce(customer_orders.number_of_orders, 0) as number_of_orders
+
+        from customers
+
+        left join customer_orders using (customer_id)
+
+    )
+
+select *
+from final
+    );
+  
+[0m23:38:55  BigQuery adapter: https://console.cloud.google.com/bigquery?project=dbtlabs-371220&j=bq:56162585-c1a2-47e5-98b8-41f1d3157077:US&page=queryresults
+[0m23:38:55  finished collecting timing info
+[0m23:38:55  Sending event: {'category': 'dbt', 'action': 'run_model', 'label': 'e3aca3f6-0900-476b-bc83-2d28f1288d29', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f2e3070be50>]}
+[0m23:38:55  1 of 3 OK created sql table model dbt_mbuniotto.dim_customer ................... [[32mCREATE TABLE (100.0 rows, 4.3 KB processed)[0m in 2.65s]
+[0m23:38:55  Finished running node model.my_new_project.dim_customer
